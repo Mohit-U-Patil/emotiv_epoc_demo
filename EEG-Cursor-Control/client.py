@@ -5,12 +5,10 @@ import ssl
 import time
 import pyautogui
 
-########################
-#   EEG Application    #
-#   Kevin Cui          #
-########################
-
 thought = ""
+
+print("token = ", token)
+# token =  eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBJZCI6ImNvbS5tb2hpdDMubW9oaXRfcGF0aWxfYXBwMSIsImFwcFZlcnNpb24iOiIxLjAiLCJleHAiOjE1OTM3MjkxMzUsIm5iZiI6MTU5MzQ2OTkzNSwidXNlcklkIjoiOWFmNjc0ZGMtNGMyMC00NjNkLTkxYTQtMzk0M2ZmNjA5N2RkIiwidXNlcm5hbWUiOiJtb2hpdDMiLCJ2ZXJzaW9uIjoiMi4wIn0=.JHyRLXYmmeAFjEk7hFowKvktPYFgvfAN7C1SHyWZtk0=
 
 print("\n============================")
 print("Connecting to websocket...")
@@ -19,42 +17,56 @@ receivedData = create_connection("wss://localhost:6868", sslopt={"cert_reqs": ss
 
 print("Checking headset connectivity...")
 
+print("\nHeadset Query...")
 receivedData.send(json.dumps({
     "jsonrpc": "2.0",
     "method": "queryHeadsets",
     "params": {},
     "id": 1
 }))
-
 print(receivedData.recv())
 
 print("\nCreating session...")
 
+#old cortex method to open the session.
+# receivedData.send(json.dumps({
+#     "jsonrpc": "2.0",
+#     "method": "createSession",
+#     "params": {
+#         "_auth": token,
+#         "status": "open",
+#         "project": "test"
+#     },
+#     "id": 1
+# }))
+
+#new cortex method to open the session. We don't activate the session yet.
 receivedData.send(json.dumps({
+    "id": 1,
     "jsonrpc": "2.0",
     "method": "createSession",
     "params": {
-        "_auth": token,
-        "status": "open",
-        "project": "test"
-    },
-    "id": 1
+        "cortexToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBJZCI6ImNvbS5tb2hpdDMubW9oaXRfcGF0aWxfYXBwMSIsImFwcFZlcnNpb24iOiIxLjAiLCJleHAiOjE1OTM3MzA4MDcsIm5iZiI6MTU5MzQ3MTYwNywidXNlcklkIjoiOWFmNjc0ZGMtNGMyMC00NjNkLTkxYTQtMzk0M2ZmNjA5N2RkIiwidXNlcm5hbWUiOiJtb2hpdDMiLCJ2ZXJzaW9uIjoiMi4wIn0=.shMkkWk2PFSMm6ekGFeKKNlGbevM1UhiWrPGLGd1RaY=",
+        "headset": "EPOCPLUS-4A2C110A",
+        "status": "open"
+    }
 }))
+session_id = json.loads(receivedData.recv())['id']
 
 print(receivedData.recv())
 
 print("\nSubscribing to session...")
 
+#old documented method. still valid
 receivedData.send(json.dumps({
+    "id": 1,
     "jsonrpc": "2.0",
     "method": "subscribe",
     "params": {
-        "_auth": token,
-        "streams": [
-            "sys"
-        ]
-    },
-    "id": 1
+        "cortexToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBJZCI6ImNvbS5tb2hpdDMubW9oaXRfcGF0aWxfYXBwMSIsImFwcFZlcnNpb24iOiIxLjAiLCJleHAiOjE1OTM3MzA4MDcsIm5iZiI6MTU5MzQ3MTYwNywidXNlcklkIjoiOWFmNjc0ZGMtNGMyMC00NjNkLTkxYTQtMzk0M2ZmNjA5N2RkIiwidXNlcm5hbWUiOiJtb2hpdDMiLCJ2ZXJzaW9uIjoiMi4wIn0=.shMkkWk2PFSMm6ekGFeKKNlGbevM1UhiWrPGLGd1RaY=",
+        "session": session_id,
+        "streams": ["sys","mot"]
+    }
 }))
 
 print(receivedData.recv())
